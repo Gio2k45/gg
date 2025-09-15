@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Đếm Ngày Yêu</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <meta name="theme-color" content="#ec407a">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/feather-icons"></script>
+  <script src="https://cdn.jsdelivr.net/npm/feather-icons/dist/feather.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.11.4/gsap.min.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Roboto:wght@300;400;500;700&display=swap');
+    .heart { animation: heartbeat 1.5s ease-in-out infinite; }
+    @keyframes heartbeat { 0%{transform:scale(1);}25%{transform:scale(1.1);}50%{transform:scale(1);}75%{transform:scale(1.1);}100%{transform:scale(1);} }
+    .falling-hearts{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:-1;}
+    .falling-heart{position:absolute;color:#ff6b81;font-size:20px;opacity:0;animation:falling linear infinite;}
+    @keyframes falling{0%{transform:translateY(-10vh) rotate(0deg);opacity:1;}100%{transform:translateY(110vh) rotate(360deg);opacity:0;}}
+    .font-dancing{font-family:'Dancing Script',cursive;}
+    #iosTip{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:50;align-items:center;justify-content:center;padding:16px;}
+  </style>
+</head>
+<body class="bg-gradient-to-b from-pink-50 to-red-50 min-h-screen flex flex-col items-center justify-center p-4">
+  <div class="falling-hearts" id="hearts-container"></div>
+
+  <!-- iOS Add to Home Screen tip -->
+  <div id="iosTip">
+    <div class="bg-white rounded-2xl p-5 max-w-sm w-full text-center">
+      <h3 class="text-lg font-semibold mb-2">Thêm ra Màn hình chính</h3>
+      <p class="text-sm text-gray-600 mb-3">
+        Trên iPhone/iPad: mở trang trong <b>Safari</b> → nhấn <b>Chia sẻ</b> → chọn <b>Thêm vào Màn hình chính</b>.
+      </p>
+      <button id="iosTipClose" class="px-4 py-2 rounded-xl bg-pink-500 text-white w-full">Đã hiểu</button>
+    </div>
+  </div>
+
+  <div class="w-full max-w-md bg-white rounded-3xl shadow-xl overflow-hidden p-6" data-aos="fade-up">
+    <!-- Đồng hồ trên cùng -->
+    <div class="w-full flex items-center justify-center mb-3">
+      <div id="liveClock" class="px-3 py-1 rounded-full bg-pink-50 border border-pink-200 text-sm font-medium text-pink-700"></div>
+    </div>
+
+    <!-- Tiêu đề + bộ đếm -->
+    <div class="text-center mb-8">
+      <h1 class="text-3xl font-bold text-pink-600 mb-2 font-dancing">Đếm Ngày Yêu</h1>
+      <div class="flex justify-center space-x-4">
+        <div class="text-center"><div class="text-4xl font-bold text-gray-800" id="years">0</div><div class="text-sm text-gray-500">Năm</div></div>
+        <div class="text-center"><div class="text-4xl font-bold text-gray-800" id="months">0</div><div class="text-sm text-gray-500">Tháng</div></div>
+        <div class="text-center"><div class="text-4xl font-bold text-gray-800" id="days">0</div><div class="text-sm text-gray-500">Ngày</div></div>
+        <div class="text-center"><div class="text-4xl font-bold text-gray-800" id="hours">0</div><div class="text-sm text-gray-500">Giờ</div></div>
+      </div>
+    </div>
+
+    <!-- Khuôn mặt đôi & trái tim -->
+    <div class="flex items-center justify-between mb-8">
+      <div class="flex flex-col items-center">
+        <div class="w-20 h-20 rounded-full bg-pink-200 mb-2 overflow-hidden border-4 border-pink-300">
+          <img src="http://static.photos/people/200x200/1" alt="Person 1" class="w-full h-full object-cover">
+        </div>
+        <span class="font-medium text-gray-700">Người Yêu 1</span>
+      </div>
+      <div class="relative">
+        <div class="heart text-pink-500 text-5xl"><i data-feather="heart"></i></div>
+        <div class="absolute -bottom-6 left-1/2 transform -translate-x-1/2 whitespace-nowrap text-xs text-gray-500">02/01/2022</div>
+      </div>
+      <div class="flex flex-col items-center">
+        <div class="w-20 h-20 rounded-full bg-pink-200 mb-2 overflow-hidden border-4 border-pink-300">
+          <img src="http://static.photos/people/200x200/2" alt="Person 2" class="w-full h-full object-cover">
+        </div>
+        <span class="font-medium text-gray-700">Người Yêu 2</span>
+      </div>
+    </div>
+
+    <!-- Kỉ niệm sắp tới -->
+    <div class="bg-pink-50 rounded-xl p-4 mb-6 text-center">
+      <i data-feather="star" class="text-pink-500 mx-auto mb-2"></i>
+      <h3 class="font-medium text-gray-700">Kỉ niệm sắp tới</h3>
+      <p class="text-sm text-pink-600 font-bold" id="nextAnniversary">Đang tính...</p>
+      <p class="text-xs text-gray-500 mt-1" id="nextAnniversaryDate"></p>
+    </div>
+
+    <!-- Nút hành động -->
+    <div class="grid grid-cols-2 gap-4 mb-6">
+      <button id="shareBtn" class="bg-white border border-pink-300 hover:bg-pink-50 text-pink-600 py-3 rounded-xl font-medium flex items-center justify-center space-x-2 transition duration-300">
+        <i data-feather="share-2"></i><span>Chia sẻ</span>
+      </button>
+      <button id="installBtn" class="bg-pink-500 hover:bg-pink-600 text-white py-3 rounded-xl font-medium flex items-center justify-center space-x-2 transition duration-300" style="display:none">
+        <i data-feather="plus"></i><span>Thêm màn hình</span>
+      </button>
+    </div>
+
+    <p class="text-center text-xs text-gray-400" id="installHint"></p>
+  </div>
+
+  <script>
+    feather.replace();
+    const START_DATE = new Date('2022-01-02T00:00:00');
+
+    // Đồng hồ sống
+    function updateLiveClock() {
+      const now = new Date();
+      const str = now.toLocaleString('vi-VN', {
+        weekday: 'long', day: '2-digit', month: '2-digit', year: 'numeric',
+        hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false
+      });
+      const el = document.getElementById('liveClock');
+      if (el) el.textContent = str;
+    }
+    updateLiveClock(); setInterval(updateLiveClock, 1000);
+
+    // Đếm thời gian yêu (đơn giản, gần đúng)
+    function updateTimer() {
+      const now = new Date();
+      const diff = now - START_DATE;
+      const years  = Math.floor(diff / (1000 * 60 * 60 * 24 * 365));
+      const months = Math.floor((diff % (1000 * 60 * 60 * 24 * 365)) / (1000 * 60 * 60 * 24 * 30));
+      const days   = Math.floor((diff % (1000 * 60 * 60 * 24 * 30)) / (1000 * 60 * 60 * 24));
+      const hours  = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      document.getElementById('years').textContent  = years;
+      document.getElementById('months').textContent = months;
+      document.getElementById('days').textContent   = days;
+      document.getElementById('hours').textContent  = hours;
+    }
+    updateTimer(); setInterval(updateTimer, 3600000);
+
+    // Kỉ niệm sắp tới (hiển thị luôn NGÀY + thứ)
+    function calculateNextAnniversary() {
+      const now = new Date();
+      const currentYear = now.getFullYear();
+      const thisYearAnniv = new Date(currentYear, 0, 2); // 02/01
+      const baseYear = 2022;
+      const nextAnniv = (now > thisYearAnniv) ? new Date(currentYear + 1, 0, 2) : thisYearAnniv;
+      const diffDays = Math.ceil((nextAnniv - now) / (1000 * 60 * 60 * 24));
+      const yearsRound = nextAnniv.getFullYear() - baseYear;
+      const dateStr = nextAnniv.toLocaleDateString('vi-VN', { weekday:'long', day:'2-digit', month:'2-digit', year:'numeric' });
+      document.getElementById('nextAnniversary').textContent = `Còn ${diffDays} ngày (tròn ${yearsRound} năm)`;
+      document.getElementById('nextAnniversaryDate').textContent = `Ngày kỉ niệm: ${dateStr}`;
+    }
+    calculateNextAnniversary(); setInterval(calculateNextAnniversary, 60000);
+
+    // Chia sẻ
+    document.getElementById('shareBtn').addEventListener('click', async () => {
+      try {
+        await navigator.share({ title: 'Đếm Ngày Yêu', text: 'Chia sẻ trang đếm ngày yêu của chúng mình!', url: window.location.href });
+      } catch (err) {
+        const shareUrl = window.location.href;
+        const tempInput = document.createElement('input');
+        document.body.appendChild(tempInput);
+        tempInput.value = shareUrl; tempInput.select();
+        document.execCommand('copy'); document.body.removeChild(tempInput);
+        alert('Đã sao chép liên kết vào clipboard!');
+      }
+    });
+
+    // --- PWA install flow ---
+    let deferredPrompt = null;
+    const installBtn = document.getElementById('installBtn');
+    const installHint = document.getElementById('installHint');
+
+    // Đăng ký Service Worker
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', async () => {
+        try { await navigator.serviceWorker.register('./sw.js'); }
+        catch (e) { console.warn('SW register failed', e); }
+      });
+    }
+
+    // Hiện nút khi beforeinstallprompt (Android/Chrome)
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      installBtn.style.display = 'flex';
+      installHint.textContent = 'Bạn có thể cài ứng dụng này để dùng như app.';
+    });
+
+    installBtn.addEventListener('click', async () => {
+      if (deferredPrompt) {
+        deferredPrompt.prompt();
+        const { outcome } = await deferredPrompt.userChoice;
+        if (outcome === 'accepted') {
+          installBtn.style.display = 'none';
+          installHint.textContent = 'Cảm ơn bạn đã cài!';
+        }
+        deferredPrompt = null;
+      } else if (isIOS() && isSafari()) {
+        document.getElementById('iosTip').style.display = 'flex';
+      } else {
+        alert('Trình duyệt của bạn không hỗ trợ cài đặt PWA tự động. Hãy thử Chrome/Edge hoặc thêm thủ công.');
+      }
+    });
+
+    // Ẩn nút nếu đã ở standalone
+    function isStandalone() {
+      return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+    }
+    function isIOS() { return /iphone|ipad|ipod/i.test(window.navigator.userAgent); }
+    function isSafari() { return /^((?!chrome|android).)*safari/i.test(window.navigator.userAgent); }
+    function updateInstallVisibility() {
+      if (isStandalone()) {
+        installBtn.style.display = 'none';
+        installHint.textContent = 'Ứng dụng đã được cài đặt.';
+      } else if (isIOS() && isSafari()) {
+        installBtn.style.display = 'flex';
+        installHint.textContent = 'Trên iPhone/iPad: Chia sẻ → Thêm vào Màn hình chính.';
+      }
+    }
+    updateInstallVisibility();
+    window.addEventListener('appinstalled', () => { installBtn.style.display = 'none'; installHint.textContent = 'Đã cài đặt xong!'; });
+    document.getElementById('iosTipClose').addEventListener('click', () => document.getElementById('iosTip').style.display = 'none');
+
+    // Nền trái tim rơi
+    function createHearts() {
+      const container = document.getElementById('hearts-container');
+      const heartCount = 15;
+      for (let i = 0; i < heartCount; i++) {
+        const heart = document.createElement('div');
+        heart.classList.add('falling-heart');
+        heart.innerHTML = '<i data-feather="heart"></i>';
+        heart.style.left = Math.random() * 100 + 'vw';
+        heart.style.animationDuration = (Math.random() * 3 + 5) + 's';
+        heart.style.animationDelay = (Math.random() * 5) + 's';
+        container.appendChild(heart);
+      }
+      feather.replace();
+    }
+    createHearts();
+    gsap.to(".heart", { scale: 1.2, duration: 0.5, yoyo: true, repeat: -1, ease: "power1.inOut" });
+  </script>
+</body>
+</html>
